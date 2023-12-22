@@ -208,6 +208,11 @@ def _create_reader(numbering, content_types, relationships, styles, docx_file, f
         if internal_link_result is not None:
             return dict(anchor=internal_link_result.group(1))
 
+        internal_link_result = re.match(r' REF _Ref\d* \\h ', instr_text)
+        if internal_link_result is not None:
+            href = '#' + re.search(r'(?<=REF )_Ref\d*(?= \\h)', instr_text).group(0)
+            return dict(href=href)
+
         return None
 
     def read_instr_text(element):
@@ -538,6 +543,7 @@ def _create_reader(numbering, content_types, relationships, styles, docx_file, f
         "w:r": run,
         "w:p": paragraph,
         "w:fldChar": read_fld_char,
+        "w:fldSimple": read_child_elements,
         "w:instrText": read_instr_text,
         "w:tab": tab,
         "w:noBreakHyphen": no_break_hyphen,

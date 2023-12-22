@@ -299,6 +299,18 @@ def test_can_extract_raw_text():
         assert_equal("Apple\n\nBanana\n\n", result.value)
 
 
+def test_cross_references():
+    with open(generate_test_path("cross-references.docx"), "rb") as fileobj:
+        result = mammoth.convert_to_html(fileobj=fileobj)
+        expected_html = (
+            '<h1>Chapter</h1>' +
+            '<p>Equation 0.A. Caption with a chapter number.</p>' +
+            '<p><a id="_Ref154139312"></a>Figure 1. Caption.</p>' +
+            '<p>See <a href="#_Ref154139312">Figure 1</a>.</p>'
+        )
+        assert_equal(expected_html, result.value)
+
+
 def _copy_of_test_data(path):
     destination = io.BytesIO()
     with open(generate_test_path(path), "rb") as source:
