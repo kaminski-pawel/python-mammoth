@@ -311,6 +311,15 @@ def test_cross_references():
         assert_equal(expected_html, result.value)
 
 
+def test_bibliography_citations():
+    with open(generate_test_path("bibliography.docx"), "rb") as fileobj:
+        result = mammoth.convert_to_html(fileobj=fileobj)
+        expected_html = (
+            ''
+        )
+        assert_equal(expected_html, result.value)
+
+
 def _copy_of_test_data(path):
     destination = io.BytesIO()
     with open(generate_test_path(path), "rb") as source:

@@ -1,4 +1,5 @@
 import contextlib
+import json
 import re
 import sys
 
@@ -83,6 +84,9 @@ def _create_reader(numbering, content_types, relationships, styles, docx_file, f
         return _success(documents.Text(_inner_text(element)))
 
     def run(element):
+        if current_instr_text:
+            print('============== run')
+            print("current_instr_text", current_instr_text)
         properties = element.find_child_or_null("w:rPr")
         vertical_alignment = properties \
             .find_child_or_null("w:vertAlign") \
@@ -182,6 +186,11 @@ def _create_reader(numbering, content_types, relationships, styles, docx_file, f
         return None
 
     def read_fld_char(element):
+        print("=================== read_fld_char")
+        print("element", element)
+        print("complex_field_stack", complex_field_stack)
+        print("current_instr_text", current_instr_text)
+
         fld_char_type = element.attributes.get("w:fldCharType")
         if fld_char_type == "begin":
             complex_field_stack.append(complex_fields.unknown)
@@ -191,6 +200,7 @@ def _create_reader(numbering, content_types, relationships, styles, docx_file, f
         elif fld_char_type == "separate":
             instr_text = "".join(current_instr_text)
             hyperlink_kwargs = parse_hyperlink_field_code(instr_text)
+            print("*********** hyperlink_kwargs", hyperlink_kwargs)
             if hyperlink_kwargs is None:
                 complex_field = complex_fields.unknown
             else:
@@ -208,15 +218,41 @@ def _create_reader(numbering, content_types, relationships, styles, docx_file, f
         if internal_link_result is not None:
             return dict(anchor=internal_link_result.group(1))
 
+        # TODO: instead of " " use \s* or \s+
+        # TODO: if `dict(anchor=...)` maybe there won't be a need for `"#" + ...`
         internal_link_result = re.match(r' REF _Ref\d* \\h ', instr_text)
         if internal_link_result is not None:
             href = '#' + re.search(r'(?<=REF )_Ref\d*(?= \\h)', instr_text).group(0)
             return dict(href=href)
 
+        citation_link_result = re.match(r'\s*ADDIN\s+ZOTERO_ITEM\s+CSL_CITATION\s*', instr_text)
+        if citation_link_result is not None:
+            props = json.loads(instr_text[citation_link_result.span()[1]:], strict=False)
+            return dict(href="_".join(["#", "zotero", props.get("citationID", "")]))
         return None
 
     def read_instr_text(element):
-        current_instr_text.append(_inner_text(element))
+        instr_text = _inner_text(element)
+        current_instr_text.append(instr_text)
+        match_result = re.match(r'\s*ADDIN\s+ZOTERO_ITEM\s+CSL_CITATION\s*', instr_text)
+        if match_result is not None:
+            citation_props = instr_text[match_result.span()[1]:]
+            return _ReadResult(
+                [documents.run(
+                    children=[documents.text(citation_props)],
+                    style_id="style_id",
+                    style_name="style_name",
+                    is_bold=False,
+                    is_italic=False,
+                    is_underline=False,
+                    is_strikethrough=False,
+                    is_all_caps=False,
+                    is_small_caps=False,
+                    vertical_alignment="baseline",
+                    font=None,
+                    font_size=None,
+                )],
+            [], [])
         return _empty_result
 
     def _read_style(properties, style_tag_name, style_type, find_style_by_id):
