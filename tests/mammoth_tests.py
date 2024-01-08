@@ -227,7 +227,6 @@ def test_when_style_mapping_is_defined_for_comment_references_then_comments_are_
         '<dl><dt id="doc-42-comment-0">Comment [MW1]</dt><dd><p>A tachyon walks into a bar. <a href="#doc-42-comment-ref-0">↑</a></p></dd>' +
         '<dt id="doc-42-comment-2">Comment [MW2]</dt><dd><p>Fin. <a href="#doc-42-comment-ref-2">↑</a></p></dd></dl>'
     )
-
     with open(generate_test_path("comments.docx"), "rb") as fileobj:
         result = mammoth.convert_to_html(fileobj=fileobj, id_prefix="doc-42-", style_map="comment-reference => sup")
         assert_equal([], result.messages)
@@ -314,10 +313,10 @@ def test_cross_references():
 def test_bibliography_citations():
     with open(generate_test_path("bibliography.docx"), "rb") as fileobj:
         result = mammoth.convert_to_html(fileobj=fileobj)
-        expected_html = (
-            ''
-        )
-        assert_equal(expected_html, result.value)
+        expected_html_start = '<p>A claim <span hidden="hidden" id="_zotero_RrR5KrBF">_dgtmon_ZOTERO_CITATION {'
+        expected_html_end = '</span><a href="#_zotero_RrR5KrBF">(Hall 2013)</a>.</p>'
+        assert result.value.startswith(expected_html_start)
+        assert result.value.endswith(expected_html_end)
 
 
 def _copy_of_test_data(path):

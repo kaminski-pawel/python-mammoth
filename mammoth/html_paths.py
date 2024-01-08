@@ -1,13 +1,13 @@
 import cobble
 
 from . import html
-
+from html import escape
 
 def path(elements):
     return HtmlPath(elements)
 
 
-def element(names, class_names=None, fresh=None, separator=None):
+def element(names, class_names=None, fresh=None, separator=None, identifier=None, hidden=False):
     if class_names is None:
         class_names = []
     if fresh is None:
@@ -16,6 +16,10 @@ def element(names, class_names=None, fresh=None, separator=None):
         attributes = {"class": " ".join(class_names)}
     else:
         attributes = {}
+    if identifier:
+        attributes["id"] = escape(identifier)
+    if hidden:
+        attributes["hidden"] = "hidden"
     return HtmlPathElement(html.tag(
         tag_names=names,
         attributes=attributes,
