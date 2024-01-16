@@ -4,6 +4,8 @@ from __future__ import unicode_literals
 
 import base64
 import io
+import json
+import re
 import shutil
 import os
 
@@ -311,12 +313,18 @@ def test_cross_references():
 
 
 def test_bibliography_citations():
-    with open(generate_test_path("bibliography.docx"), "rb") as fileobj:
+    with open(generate_test_path("citations.docx"), "rb") as fileobj:
         result = mammoth.convert_to_html(fileobj=fileobj)
-        expected_html_start = '<p>A claim <span hidden="hidden" id="_zotero_RrR5KrBF">_dgtmon_ZOTERO_CITATION {'
-        expected_html_end = '</span><a href="#_zotero_RrR5KrBF">(Hall 2013)</a>.</p>'
+        expected_html_start = '<p>A claim <span class="citation" data-src="data:application/json;base64,eyJjaX'
+        expected_html_end = 'ifSA=" hidden="hidden"> </span><a href="#citation_RrR5KrBF">(Hall 2013)</a>.</p>'
         assert result.value.startswith(expected_html_start)
         assert result.value.endswith(expected_html_end)
+        
+        pattern = re.compile(r"(?<=data-src=\"data:application\/json;base64,)([a-zA-z0-9-=:;,']+)")
+        citation_str = base64.b64decode(pattern.search(result.value).group(0))
+        citation_data = json.loads(citation_str)
+        assert_equal(citation_data.get("schema"), "https://github.com/citation-style-language/schema/raw/master/csl-citation.json")
+        assert_equal(citation_data["citationItems"][0]["itemData"]["type"], "book")
 
 
 def _copy_of_test_data(path):

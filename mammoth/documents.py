@@ -99,6 +99,13 @@ class Image(Element):
     open = cobble.field()
 
 
+@cobble.data
+class HiddenSpan(Element):
+    content_type = cobble.field()
+    base64_data = cobble.field()
+    class_name = cobble.field()
+
+
 def document(children, notes=None, comments=None):
     if notes is None:
         notes = Notes({})
@@ -160,6 +167,8 @@ def tab():
 
 
 image = Image
+
+hidden_span = HiddenSpan
 
 def hyperlink(children, href=None, anchor=None, target_frame=None):
     return Hyperlink(href=href, anchor=anchor, target_frame=target_frame, children=children)

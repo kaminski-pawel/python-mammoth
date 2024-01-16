@@ -1,3 +1,4 @@
+import base64
 import contextlib
 import json
 import re
@@ -219,7 +220,7 @@ def _create_reader(numbering, content_types, relationships, styles, docx_file, f
         citation_link_result = re.match(r'\s*ADDIN\s+ZOTERO_ITEM\s+CSL_CITATION\s*', instr_text)
         if citation_link_result is not None:
             props = json.loads(instr_text[citation_link_result.span()[1]:], strict=False)
-            return dict(href="_".join(["#", "zotero", props.get("citationID", "")]))
+            return dict(anchor=f"citation_{props.get('citationID', '')}")
         return None
 
     def read_instr_text(element):
@@ -227,23 +228,13 @@ def _create_reader(numbering, content_types, relationships, styles, docx_file, f
         current_instr_text.append(instr_text)
         match_result = re.match(r'\s*ADDIN\s+ZOTERO_ITEM\s+CSL_CITATION\s*', instr_text)
         if match_result is not None:
-            # make a zotero citation data into a Run element. During conversion, it will be 
-            # transformed into a hidden <span hidden> tag with an id attribute.
-            citation_props = instr_text[match_result.span()[1]:]
+            citation_bytes = base64.b64encode(instr_text[match_result.span()[1]:].encode("utf-8"))
+            citation_str = citation_bytes.decode("utf-8")
             return _ReadResult(
-                [documents.run(
-                    children=[documents.text("_dgtmon_ZOTERO_CITATION " + citation_props)],
-                    style_id=None,
-                    style_name=None,
-                    is_bold=False,
-                    is_italic=False,
-                    is_underline=False,
-                    is_strikethrough=False,
-                    is_all_caps=False,
-                    is_small_caps=False,
-                    vertical_alignment="baseline",
-                    font=None,
-                    font_size=None,
+                [documents.hidden_span(
+                    content_type="application/json",
+                    class_name="citation",
+                    base64_data=citation_str,
                 )],
             [], [])
         return _empty_result
