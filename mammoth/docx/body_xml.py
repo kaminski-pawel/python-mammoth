@@ -53,6 +53,7 @@ class _BodyReader(object):
 def _create_reader(numbering, content_types, relationships, styles, docx_file, files):
     current_instr_text = []
     complex_field_stack = []
+    citations_stack = []
 
     # When a paragraph is marked as deleted, its contents should be combined
     # with the following paragraph. See 17.13.5.15 del (Deleted Paragraph) of
@@ -193,6 +194,14 @@ def _create_reader(numbering, content_types, relationships, styles, docx_file, f
         elif fld_char_type == "separate":
             instr_text = "".join(current_instr_text)
             hyperlink_kwargs = parse_hyperlink_field_code(instr_text)
+            if citations_stack:
+                return _ReadResult(
+                    [documents.hidden_span(
+                        content_type="application/json",
+                        class_name="citation",
+                        base64_data=_unstack_and_encode_citations(),
+                    )],
+                [], [])
             if hyperlink_kwargs is None:
                 complex_field = complex_fields.unknown
             else:
@@ -200,6 +209,14 @@ def _create_reader(numbering, content_types, relationships, styles, docx_file, f
             complex_field_stack.pop()
             complex_field_stack.append(complex_field)
         return _empty_result
+
+    def _unstack_and_encode_citations():
+        citation_str = "".join(citation_instr_text for (_, citation_instr_text) in citations_stack)
+        citation_bytes = base64.b64encode(citation_str.encode("utf-8"))
+        citation_b64_as_str = citation_bytes.decode("utf-8")
+        del citations_stack[:]
+        return citation_b64_as_str
+
 
     def parse_hyperlink_field_code(instr_text):
         external_link_result = re.match(r'\s*HYPERLINK "(.*)"', instr_text)
@@ -226,17 +243,15 @@ def _create_reader(numbering, content_types, relationships, styles, docx_file, f
     def read_instr_text(element):
         instr_text = _inner_text(element)
         current_instr_text.append(instr_text)
-        match_result = re.match(r'\s*ADDIN\s+ZOTERO_ITEM\s+CSL_CITATION\s*', instr_text)
-        if match_result is not None:
-            citation_bytes = base64.b64encode(instr_text[match_result.span()[1]:].encode("utf-8"))
-            citation_str = citation_bytes.decode("utf-8")
-            return _ReadResult(
-                [documents.hidden_span(
-                    content_type="application/json",
-                    class_name="citation",
-                    base64_data=citation_str,
-                )],
-            [], [])
+        zotero_citation_end = re.match(r'\s*ADDIN\s+ZOTERO_ITEM\s+CSL_CITATION\s*', instr_text)
+        if zotero_citation_end is not None:
+            citation_group = element.attributes.get("parent_w:rsidR")
+            citation_str = instr_text[zotero_citation_end.span()[1]:]
+            citations_stack.append((citation_group, citation_str))
+        elif citations_stack and citations_stack[-1][0] == element.attributes.get("parent_w:rsidR"):
+            citation_group = element.attributes.get("parent_w:rsidR")
+            citation_str = instr_text
+            citations_stack.append((citation_group, citation_str))
         return _empty_result
 
     def _read_style(properties, style_tag_name, style_type, find_style_by_id):
