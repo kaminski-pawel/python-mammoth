@@ -82,7 +82,12 @@ def _create_reader(numbering, content_types, relationships, styles, docx_file, f
         "w:tcPr",
     ])
 
+    def _is_part_of_citation_stack(element):
+        return citations_stack and citations_stack[-1][0] == element.attributes.get("parent_w:rsidR")
+
     def text(element):
+        if _is_part_of_citation_stack(element):
+            return _empty_result
         return _success(documents.Text(_inner_text(element)))
 
     def run(element):
@@ -191,6 +196,7 @@ def _create_reader(numbering, content_types, relationships, styles, docx_file, f
             del current_instr_text[:]
         elif fld_char_type == "end":
             complex_field_stack.pop()
+            del citations_stack[:]
         elif fld_char_type == "separate":
             instr_text = "".join(current_instr_text)
             hyperlink_kwargs = parse_hyperlink_field_code(instr_text)
@@ -214,7 +220,6 @@ def _create_reader(numbering, content_types, relationships, styles, docx_file, f
         citation_str = "".join(citation_instr_text for (_, citation_instr_text) in citations_stack)
         citation_bytes = base64.b64encode(citation_str.encode("utf-8"))
         citation_b64_as_str = citation_bytes.decode("utf-8")
-        del citations_stack[:]
         return citation_b64_as_str
 
 
@@ -248,7 +253,7 @@ def _create_reader(numbering, content_types, relationships, styles, docx_file, f
             citation_group = element.attributes.get("parent_w:rsidR")
             citation_str = instr_text[zotero_citation_end.span()[1]:]
             citations_stack.append((citation_group, citation_str))
-        elif citations_stack and citations_stack[-1][0] == element.attributes.get("parent_w:rsidR"):
+        elif _is_part_of_citation_stack(element):
             citation_group = element.attributes.get("parent_w:rsidR")
             citation_str = instr_text
             citations_stack.append((citation_group, citation_str))

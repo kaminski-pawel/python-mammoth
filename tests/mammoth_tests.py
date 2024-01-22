@@ -316,7 +316,7 @@ def test_bibliography_citations():
     with open(generate_test_path("citations.docx"), "rb") as fileobj:
         result = mammoth.convert_to_html(fileobj=fileobj)
         expected_html_start = '<p>A claim <span class="citation" data-src="data:application/json;base64,eyJjaXRhdGlvbklEIjoi'
-        expected_html_end = 'A=" hidden="hidden"> </span>(Ce 2010).</p>'
+        expected_html_end = '=" hidden="hidden"> </span>.</p>'
         assert result.value.startswith(expected_html_start)
         assert result.value.endswith(expected_html_end)
         
@@ -327,6 +327,7 @@ def test_bibliography_citations():
         assert_equal(citations[0]["citationItems"][0]["itemData"]["type"], "book")
         assert_equal(citations[0]["citationItems"][0]["itemData"]["title"], "Zażółć gęślą jaźń")
         assert_equal(citations[0]["citationItems"][0]["itemData"]["publisher-place"], "안돌이지돌이다래미한숨바우")
+        assert_equal(citations[0]["citationItems"][0]["prefix"], "see")
         # citation no. 2
         assert_equal(citations[1]["citationItems"][0]["itemData"]["type"], "chapter")
         assert_equal(citations[1]["citationItems"][0]["itemData"]["title"], "I disagree")
