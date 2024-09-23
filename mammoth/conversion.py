@@ -3,7 +3,6 @@
 from __future__ import unicode_literals
 
 from functools import partial
-import json
 
 import cobble
 
@@ -108,16 +107,8 @@ class _DocumentConverter(documents.element_visitor(args=1)):
 
 
     def visit_run(self, run, context):
-        identifier = None
         nodes = lambda: self._visit_all(run.children, context)
         paths = []
-
-        if run.children and hasattr(run.children[0], "value") and run.children[0].value.startswith("_dgtmon_ZOTERO_CITATION "):
-            # TODO: refactor to a more elegant solution
-            props = json.loads(run.children[0].value[len("_dgtmon_ZOTERO_CITATION"):], strict=False)
-            if props.get("citationID", None):
-                identifier = "_zotero_" + props.get("citationID")
-            paths.append(html_paths.element(["span"], identifier=identifier, hidden=True, fresh=False))
 
         if run.is_small_caps:
             paths.append(self._find_style_for_run_property("small_caps"))
@@ -241,6 +232,17 @@ class _DocumentConverter(documents.element_visitor(args=1)):
             return html_paths.path([html_paths.element("br", fresh=True)])
         else:
             return html_paths.empty
+
+
+    def visit_hidden_span(self, hidden_span, context):
+        attrs = {
+            "class": hidden_span.class_name,
+            "hidden": "hidden",
+            **({"data-src": "data:{0};base64,{1}".format(hidden_span.content_type, hidden_span.base64_data)} if hidden_span.base64_data else {}),
+        }
+        return [
+            html.element("span", attrs, [html.text(" ")])
+        ]
 
 
     def visit_note_reference(self, note_reference, context):

@@ -4,6 +4,8 @@ from __future__ import unicode_literals
 
 import base64
 import io
+import json
+import re
 import shutil
 import os
 
@@ -311,12 +313,26 @@ def test_cross_references():
 
 
 def test_bibliography_citations():
-    with open(generate_test_path("bibliography.docx"), "rb") as fileobj:
+    with open(generate_test_path("citations.docx"), "rb") as fileobj:
         result = mammoth.convert_to_html(fileobj=fileobj)
-        expected_html_start = '<p>A claim <span hidden="hidden" id="_zotero_RrR5KrBF">_dgtmon_ZOTERO_CITATION {'
-        expected_html_end = '</span><a href="#_zotero_RrR5KrBF">(Hall 2013)</a>.</p>'
+        expected_html_start = '<p>A claim <span class="citation" data-src="data:application/json;base64,eyJjaXRhdGlvbklEIjoi'
+        expected_html_end = '=" hidden="hidden"> </span>.</p>'
         assert result.value.startswith(expected_html_start)
         assert result.value.endswith(expected_html_end)
+        
+        pattern = re.compile(r"(?<=data-src=\"data:application\/json;base64,)([a-zA-z0-9-=:;,']+)")
+        _citations = re.findall(pattern, result.value)
+        citations = [json.loads(base64.b64decode(c)) for c in _citations]
+        # citation no. 1
+        assert_equal(citations[0]["citationItems"][0]["itemData"]["type"], "book")
+        assert_equal(citations[0]["citationItems"][0]["itemData"]["title"], "Zażółć gęślą jaźń")
+        assert_equal(citations[0]["citationItems"][0]["itemData"]["publisher-place"], "안돌이지돌이다래미한숨바우")
+        assert_equal(citations[0]["citationItems"][0]["prefix"], "see")
+        # citation no. 2
+        assert_equal(citations[1]["citationItems"][0]["itemData"]["type"], "chapter")
+        assert_equal(citations[1]["citationItems"][0]["itemData"]["title"], "I disagree")
+        assert_equal(citations[1]["citationItems"][0]["itemData"]["author"][0]["given"], "Abe")
+        assert_equal(citations[1]["citationItems"][0]["itemData"]["issued"]["date-parts"][0], ['2010', 12, 31])
 
 
 def _copy_of_test_data(path):

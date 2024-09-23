@@ -98,6 +98,22 @@ def parse_xml(fileobj, namespace_mapping=None):
             for attribute in element.attributes.values()
             if attribute.namespaceURI != "http://www.w3.org/2000/xmlns/"
         )
+        if element.parentNode and element.parentNode.attributes:
+            converted_attributes.update({f"parent_{k}": v for k, v in element.parentNode.attributes.items() if k == "w:rsidR"})
+            # for element.parentNode.attributes.items():
+
+
+
+        # print(">>> element", element, dir(element), type(element))
+        # print("-" * 10)
+        # print("element.parentNode", element.parentNode, dir(element.parentNode), type(element.parentNode))
+        # print("-" * 10)
+        # print("element.parentNode.attributes", element.parentNode.attributes, dir(element.parentNode.attributes), type(element.parentNode.attributes))
+        # if element.parentNode.attributes:
+        #     print("-" * 10)
+        #     print("element.parentNode.attributes.items()", dict(element.parentNode.attributes.items()), element.parentNode.attributes.items(), dir(element.parentNode.attributes.items()), type(element.parentNode.attributes.values()))
+        # print("\n\n")
+
 
         converted_children = []
         for child_node in element.childNodes:
