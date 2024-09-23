@@ -9,12 +9,12 @@ def read(fname):
 
 setup(
     name='mammoth',
-    version='1.6.1',
+    version='1.6.1@1.0.0',
     description='Convert Word documents from docx to simple and clean HTML and Markdown',
     long_description=read("README"),
-    author='Michael Williamson',
-    author_email='mike@zwobble.org',
-    url='https://github.com/mwilliamson/python-mammoth',
+    author='Michael Williamson, Pawel Kaminski',
+    author_email='pawel.kaminski@uni.lu',
+    url='https://github.com/kaminski-pawel/python-mammoth',
     packages=['mammoth', 'mammoth.docx', 'mammoth.html', 'mammoth.styles', 'mammoth.styles.parser', 'mammoth.writers'],
     entry_points={
         "console_scripts": [

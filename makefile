@@ -9,11 +9,11 @@ test:
 test-all:
 	tox
 
-.PHONY: upload
-
-upload: setup assert-converted-readme build-dist
-	_virtualenv/bin/twine upload dist/*
-	make clean
+# .PHONY: upload
+# 
+# upload: setup assert-converted-readme build-dist
+# 	_virtualenv/bin/twine upload dist/*
+# 	make clean
 
 .PHONY: build-dist
 
@@ -54,4 +54,5 @@ _virtualenv:
 	_virtualenv/bin/pip install --upgrade pip
 	_virtualenv/bin/pip install --upgrade setuptools
 	_virtualenv/bin/pip install --upgrade wheel
-	_virtualenv/bin/pip install --upgrade build twine
+	_virtualenv/bin/pip install --upgrade build 
+	#_virtualenv/bin/pip install --upgrade build twine
