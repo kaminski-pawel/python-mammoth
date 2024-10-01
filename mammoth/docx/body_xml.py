@@ -232,11 +232,9 @@ def _create_reader(numbering, content_types, relationships, styles, docx_file, f
         if internal_link_result is not None:
             return dict(anchor=internal_link_result.group(1))
 
-        # TODO: instead of " " use \s* or \s+
-        # TODO: if `dict(anchor=...)` maybe there won't be a need for `"#" + ...`
-        internal_link_result = re.match(r' REF _Ref\d* \\h ', instr_text)
+        internal_link_result = re.match(r'\s+REF\s+(_Ref\d*)\s+\\h ', instr_text)
         if internal_link_result is not None:
-            href = '#' + re.search(r'(?<=REF )_Ref\d*(?= \\h)', instr_text).group(0)
+            href = '#' + internal_link_result.group(1)
             return dict(href=href)
 
         citation_link_result = re.match(r'\s*ADDIN\s+ZOTERO_ITEM\s+CSL_CITATION\s*', instr_text)
