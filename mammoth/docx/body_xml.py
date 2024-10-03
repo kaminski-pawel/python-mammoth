@@ -54,6 +54,7 @@ def _create_reader(numbering, content_types, relationships, styles, docx_file, f
     current_instr_text = []
     complex_field_stack = []
     citations_stack = []
+    sequence_stack = []
 
     # When a paragraph is marked as deleted, its contents should be combined
     # with the following paragraph. See 17.13.5.15 del (Deleted Paragraph) of
@@ -88,6 +89,9 @@ def _create_reader(numbering, content_types, relationships, styles, docx_file, f
     def text(element):
         if _is_part_of_citation_stack(element):
             return _empty_result
+        if sequence_stack:
+            value = sequence_stack.pop()
+            return _success(documents.data_tag(value=value, text=_inner_text(element)))
         return _success(documents.Text(_inner_text(element)))
 
     def run(element):
@@ -429,6 +433,8 @@ def _create_reader(numbering, content_types, relationships, styles, docx_file, f
 
 
     def read_child_elements(element):
+        if element.name == "w:fldSimple":
+            sequence_stack.append(element.attributes["w:instr"])
         return _read_xml_elements(element.children)
 
 

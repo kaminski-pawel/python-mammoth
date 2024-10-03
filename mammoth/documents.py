@@ -106,6 +106,12 @@ class HiddenSpan(Element):
     class_name = cobble.field()
 
 
+@cobble.data
+class DataTag(Element):
+    value = cobble.field()
+    text = cobble.field()
+
+
 def document(children, notes=None, comments=None):
     if notes is None:
         notes = Notes({})
@@ -169,6 +175,8 @@ def tab():
 image = Image
 
 hidden_span = HiddenSpan
+
+data_tag = DataTag
 
 def hyperlink(children, href=None, anchor=None, target_frame=None):
     return Hyperlink(href=href, anchor=anchor, target_frame=target_frame, children=children)

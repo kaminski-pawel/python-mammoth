@@ -305,8 +305,8 @@ def test_cross_references():
         result = mammoth.convert_to_html(fileobj=fileobj)
         expected_html = (
             '<h1>Chapter</h1>' +
-            '<p>Equation 0.A. Caption with a chapter number.</p>' +
-            '<p><a id="_Ref154139312"></a>Figure 1. Caption.</p>' +
+            '<p>Equation <data value=" STYLEREF 1 \\s ">0</data>.<data value=" SEQ Equation \\* ALPHABETIC \\s 1 ">A</data>. Caption with a chapter number.</p>' +
+            '<p><a id="_Ref154139312"></a>Figure <data value=" SEQ Figure \\* ARABIC ">1</data>. Caption.</p>' +
             '<p>See <a href="#_Ref154139312">Figure 1</a>.</p>'
         )
         assert_equal(expected_html, result.value)

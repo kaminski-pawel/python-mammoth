@@ -244,6 +244,10 @@ class _DocumentConverter(documents.element_visitor(args=1)):
             html.element("span", attrs, [html.text(" ")])
         ]
 
+    def visit_data_tag(self, data_tag, context):
+        return [
+            html.element("data", {"value": data_tag.value}, [html.text(data_tag.text)])
+        ]
 
     def visit_note_reference(self, note_reference, context):
         self._note_references.append(note_reference)
