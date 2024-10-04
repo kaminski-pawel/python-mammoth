@@ -311,6 +311,17 @@ def test_cross_references():
         )
         assert_equal(expected_html, result.value)
 
+def test_cross_references_but_no_fldSimple():
+    with open(generate_test_path("cross-ref-but-no-fldSimple.docx"), "rb") as fileobj:
+        result = mammoth.convert_to_html(fileobj=fileobj)
+        expected_html = (
+            '<h1>Chapter</h1>' + 
+            '<p>Equation <data value=" STYLEREF 1 \\s ">0</data>.<data value=" SEQ Equation \\* ALPHABETIC \\s 1 ">A</data>. Caption with a chapter number.</p>' + 
+            '<p><a id="_Ref154139312"></a>Figure <data value=" SEQ Figure \\* ARABIC ">1</data>. Caption.</p>' + 
+            '<p><a id="_Ref178606187"></a><strong>Figure <data value=" SEQ Figure \\* ARABIC ">2</data>:</strong> 2nd caption.</p>' + 
+            '<p>See <a href="#_Ref154139312">Figure 1</a>.</p>'
+        )
+        assert_equal(expected_html, result.value)
 
 def test_bibliography_citations():
     with open(generate_test_path("citations.docx"), "rb") as fileobj:

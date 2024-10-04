@@ -259,6 +259,9 @@ def _create_reader(numbering, content_types, relationships, styles, docx_file, f
             citation_group = element.attributes.get("parent_w:rsidR")
             citation_str = instr_text
             citations_stack.append((citation_group, citation_str))
+        seq_match = re.match(r'^\s*(SEQ|STYLEREF)\s+\w+\s+', instr_text)
+        if seq_match is not None:
+            sequence_stack.append(instr_text)
         return _empty_result
 
     def _read_style(properties, style_tag_name, style_type, find_style_by_id):
