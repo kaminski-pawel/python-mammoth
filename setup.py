@@ -6,7 +6,7 @@ from setuptools import setup
 
 setup(
     name='mammoth',
-    version='1.6.0+1.1.0',
+    version='1.6.0+1.1.1',
     description='Convert Word documents from docx to simple and clean HTML and Markdown',
     author='Michael Williamson, Pawel Kaminski',
     author_email='pawel.kaminski@uni.lu',
