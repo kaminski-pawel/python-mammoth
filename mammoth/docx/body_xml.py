@@ -114,6 +114,7 @@ def _create_reader(numbering, content_types, relationships, styles, docx_file, f
         is_strikethrough = read_boolean_element(properties.find_child("w:strike"))
         is_all_caps = read_boolean_element(properties.find_child("w:caps"))
         is_small_caps = read_boolean_element(properties.find_child("w:smallCaps"))
+        highlight = read_highlight_value(properties.find_child_or_null("w:highlight").attributes.get("w:val"))
 
         def add_complex_field_hyperlink(children):
             hyperlink_kwargs = current_hyperlink_kwargs()
@@ -138,6 +139,7 @@ def _create_reader(numbering, content_types, relationships, styles, docx_file, f
                 vertical_alignment=vertical_alignment,
                 font=font,
                 font_size=font_size,
+                highlight=highlight,
             ))
 
     def _read_run_style(properties):
@@ -148,6 +150,12 @@ def _create_reader(numbering, content_types, relationships, styles, docx_file, f
 
     def read_underline_element(element):
         return element and element.attributes.get("w:val") not in [None, "false", "0", "none"]
+
+    def read_highlight_value(value):
+        if not value or value == "none":
+            return None
+        else:
+            return value
 
     def paragraph(element):
         properties = element.find_child_or_null("w:pPr")
@@ -286,17 +294,17 @@ def _create_reader(numbering, content_types, relationships, styles, docx_file, f
         return results.warning("{0} style with ID {1} was referenced but not defined in the document".format(style_type, style_id))
 
     def _read_numbering_properties(paragraph_style_id, element):
+        num_id = element.find_child_or_null("w:numId").attributes.get("w:val")
+        level_index = element.find_child_or_null("w:ilvl").attributes.get("w:val")
+        if num_id is not None and level_index is not None:
+            return numbering.find_level(num_id, level_index)
+
         if paragraph_style_id is not None:
             level = numbering.find_level_by_paragraph_style_id(paragraph_style_id)
             if level is not None:
                 return level
 
-        num_id = element.find_child_or_null("w:numId").attributes.get("w:val")
-        level_index = element.find_child_or_null("w:ilvl").attributes.get("w:val")
-        if num_id is None or level_index is None:
-            return None
-        else:
-            return numbering.find_level(num_id, level_index)
+        return None
 
     def _read_paragraph_indent(element):
         attributes = element.attributes

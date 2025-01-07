@@ -311,6 +311,7 @@ def test_cross_references():
         )
         assert_equal(expected_html, result.value)
 
+
 def test_cross_references_but_no_fldSimple():
     with open(generate_test_path("cross-ref-but-no-fldSimple.docx"), "rb") as fileobj:
         result = mammoth.convert_to_html(fileobj=fileobj)
@@ -322,6 +323,7 @@ def test_cross_references_but_no_fldSimple():
             '<p>See <a href="#_Ref154139312">Figure 1</a>.</p>'
         )
         assert_equal(expected_html, result.value)
+
 
 def test_bibliography_citations():
     with open(generate_test_path("citations.docx"), "rb") as fileobj:
@@ -344,6 +346,13 @@ def test_bibliography_citations():
         assert_equal(citations[1]["citationItems"][0]["itemData"]["title"], "I disagree")
         assert_equal(citations[1]["citationItems"][0]["itemData"]["author"][0]["given"], "Abe")
         assert_equal(citations[1]["citationItems"][0]["itemData"]["issued"]["date-parts"][0], ['2010', 12, 31])
+
+
+def test_can_read_strict_format():
+    with open(generate_test_path("strict-format.docx"), "rb") as fileobj:
+        result = mammoth.convert_to_html(fileobj=fileobj)
+        assert_equal([], result.messages)
+        assert_equal("<p>Test</p>", result.value)
 
 
 def _copy_of_test_data(path):

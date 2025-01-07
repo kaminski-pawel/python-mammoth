@@ -105,7 +105,20 @@ class ParagraphTests(object):
         assert_equal("1", paragraph.numbering.level_index)
         assert_equal(True, paragraph.numbering.is_ordered)
 
-    def test_numbering_on_paragraph_style_takes_precedence_over_numpr(self):
+    def test_paragraph_has_numbering_from_paragraph_style_if_present(self):
+        properties_xml = xml_element("w:pPr", {}, [
+            xml_element("w:pStyle", {"w:val": "List"}),
+        ])
+        paragraph_xml = xml_element("w:p", {}, [properties_xml])
+
+        numbering = _NumberingMap(
+            levels_by_paragraph_style_id={"List": documents.numbering_level("1", True)}
+        )
+        paragraph = _read_and_get_document_xml_element(paragraph_xml, numbering=numbering)
+
+        assert_equal(True, paragraph.numbering.is_ordered)
+
+    def test_numbering_properties_in_paragraph_properties_takes_precedence_over_numbering_in_paragraph_style(self):
         numbering_properties_xml = xml_element("w:numPr", {}, [
             xml_element("w:ilvl", {"w:val": "1"}),
             xml_element("w:numId", {"w:val": "42"}),
@@ -117,12 +130,12 @@ class ParagraphTests(object):
         paragraph_xml = xml_element("w:p", {}, [properties_xml])
 
         numbering = _NumberingMap(
-            nums={"42": {"1": documents.numbering_level("1", False)}},
-            levels_by_paragraph_style_id={"List": documents.numbering_level("1", True)}
+            nums={"42": {"1": documents.numbering_level("1", True)}},
+            levels_by_paragraph_style_id={"List": documents.numbering_level("2", True)}
         )
         paragraph = _read_and_get_document_xml_element(paragraph_xml, numbering=numbering)
 
-        assert_equal(True, paragraph.numbering.is_ordered)
+        assert_equal("1", paragraph.numbering.level_index)
 
     def test_numbering_properties_are_ignored_if_lvl_is_missing(self):
         paragraph_xml = self._paragraph_with_numbering_properties([
@@ -391,6 +404,20 @@ class RunTests(object):
         font_size_xml = xml_element("w:sz", {"w:val": "28a"})
         run = self._read_run_with_properties([font_size_xml])
         assert_equal(None, run.font_size)
+
+    def test_run_has_no_highlight_by_default(self):
+        run = self._read_run_with_properties([])
+        assert_equal(None, run.highlight)
+
+    def test_run_has_highlight_read_from_properties(self):
+        highlight_xml = xml_element("w:highlight", {"w:val": "yellow"})
+        run = self._read_run_with_properties([highlight_xml])
+        assert_equal("yellow", run.highlight)
+
+    def test_when_highlight_is_none_then_run_has_no_highlight(self):
+        highlight_xml = xml_element("w:highlight", {"w:val": "none"})
+        run = self._read_run_with_properties([highlight_xml])
+        assert_equal(None, run.highlight)
 
     def _read_run_with_properties(self, properties, styles=None):
         properties_xml = xml_element("w:rPr", {}, properties)

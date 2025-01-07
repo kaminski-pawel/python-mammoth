@@ -208,7 +208,7 @@ def test_strikethrough_runs_can_be_configured_with_style_mapping():
     assert_equal("<del>Hello</del>", result.value)
 
 
-def test_sml_caps_runs_are_ignored_by_default():
+def test_all_caps_runs_are_ignored_by_default():
     result = convert_document_element_to_html(
         documents.run(children=[documents.text("Hello")], is_all_caps=True),
     )
@@ -240,6 +240,37 @@ def test_small_caps_runs_can_be_mapped_using_style_mapping():
         ]
     )
     assert_equal("<span>Hello</span>", result.value)
+
+
+def test_highlighted_runs_are_ignored_by_default():
+    result = convert_document_element_to_html(
+        documents.run(children=[documents.text("Hello")], highlight="yellow"),
+    )
+    assert_equal("Hello", result.value)
+
+
+def test_highlighted_runs_can_be_configured_with_style_mapping_for_all_highlights():
+    result = convert_document_element_to_html(
+        documents.run(children=[documents.text("Hello")], highlight="yellow"),
+        style_map=[
+            _style_mapping("highlight => mark"),
+        ],
+    )
+    assert_equal("<mark>Hello</mark>", result.value)
+
+
+def test_highlighted_runs_can_be_configured_with_style_mapping_for_specific_highlight_color():
+    result = convert_document_element_to_html(
+        documents.paragraph(children=[
+            documents.run(children=[documents.text("Yellow")], highlight="yellow"),
+            documents.run(children=[documents.text("Red")], highlight="red"),
+        ]),
+        style_map=[
+            _style_mapping("highlight[color='yellow'] => mark.yellow"),
+            _style_mapping("highlight => mark"),
+        ]
+    )
+    assert_equal('<p><mark class="yellow">Yellow</mark><mark>Red</mark></p>', result.value)
 
 
 def test_superscript_runs_are_wrapped_in_sup_tags():
@@ -460,12 +491,16 @@ def test_breaks_that_are_not_line_breaks_are_ignored():
 
 def test_breaks_can_be_mapped_using_style_mappings():
     result = convert_document_element_to_html(
-        documents.page_break,
+        documents.run(children=[
+            documents.page_break,
+            documents.line_break,
+        ]),
         style_map=[
-            _style_mapping("br[type='page'] => hr")
+            _style_mapping("br[type='page'] => hr"),
+            _style_mapping("br[type='line'] => br.line-break"),
         ],
     )
-    assert_equal("<hr />", result.value)
+    assert_equal('<hr /><br class="line-break" />', result.value)
 
 
 def test_images_are_converted_to_img_tags_with_data_uri():
