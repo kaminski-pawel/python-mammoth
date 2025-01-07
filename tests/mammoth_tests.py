@@ -300,6 +300,19 @@ def test_can_extract_raw_text():
         assert_equal("Apple\n\nBanana\n\n", result.value)
 
 
+def test_highlights():
+    style_map = """
+highlight[color='yellow'] => i.y
+highlight[color='red'] => i.r
+"""
+    with open(generate_test_path("highlights.docx"), "rb") as fileobj:
+        result = mammoth.convert_to_html(fileobj=fileobj, style_map=style_map)
+        assert_equal(
+            '<p><i class="y">yellow</i> <i class="r">red </i>grey</p>',
+            result.value
+        )
+
+
 def test_cross_references():
     with open(generate_test_path("cross-references.docx"), "rb") as fileobj:
         result = mammoth.convert_to_html(fileobj=fileobj)
